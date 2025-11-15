@@ -1,0 +1,16 @@
+[build]
+  command = ""
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/send"
+  to = "/.netlify/functions/sendEmail"
+  status = 200
+
+[[redirects]]
+  from = "/api/mg-events"
+  to = "/.netlify/functions/mgEvents"
+  status = 200

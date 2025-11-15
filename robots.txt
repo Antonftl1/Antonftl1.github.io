@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wunschzettel-a.netlify.app/sitemap.xml

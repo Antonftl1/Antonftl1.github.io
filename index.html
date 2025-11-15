@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Meine Wunschliste</title>
+    <meta name="description" content="Wünsche erstellen, teilen und verwalten – schnell, schön und sicher.">
+    <link rel="canonical" href="https://wunschzettel-a.netlify.app/">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+</head>
+<body>
+    <!-- Login/Register Screen -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <h1>Meine Wunschliste</h1>
+            
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <h2>Anmelden</h2>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" required placeholder="deine@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Passwort:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <small id="loginError" class="form-error"></small>
+                    <button type="submit" class="btn btn-primary">Anmelden</button>
+                    <p class="auth-switch">Noch kein Account? <a href="#" id="showRegister">Registrieren</a></p>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form" style="display: none;">
+                <h2>Registrieren</h2>
+                <form id="registerFormElement">
+                    <div class="form-group">
+                        <label for="registerName">Name:</label>
+                        <input type="text" id="registerName" required placeholder="Dein Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="email" id="registerEmail" required placeholder="deine@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Passwort:</label>
+                        <input type="password" id="registerPassword" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerBirthday">Geburtstag:</label>
+                        <input type="date" id="registerBirthday" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="registerEmailNotifications" checked>
+                            Email-Benachrichtigungen erhalten (bei neuen Geschenken)
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Registrieren</button>
+                    <p class="auth-switch">Bereits registriert? <a href="#" id="showLogin">Anmelden</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+        <div id="appScreen" style="display: none;">
+            <!-- Dynamic Background based on occasion -->
+            <div id="dynamicBackground" class="dynamic-background"></div>
+            <div id="snowContainer" class="snowflakes" style="display:none;">
+                <div class="snowflake">❄️</div><div class="snowflake">❄️</div><div class="snowflake">❄️</div><div class="snowflake">❄️</div><div class="snowflake">❄️</div>
+                <div class="snowflake">❄️</div><div class="snowflake">❄️</div><div class="snowflake">❄️</div><div class="snowflake">❄️</div><div class="snowflake">❄️</div>
+            </div>
+            <nav id="topAppNav" class="top-app-nav">
+                <div class="nav-left">
+                    <button class="btn cta-outline" id="topHomeBtn">Start</button>
+                    <button class="hamburger" id="topMenuBtn" aria-label="Menü"></button>
+                </div>
+        </nav>
+        <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+        <!-- Events Overview Screen -->
+        <div id="mainMenuScreen" style="display: none;">
+            <section class="hero-menu">
+                <div class="hero-content">
+                    <h1 class="hero-title">Die echte Wunschliste</h1>
+                    <p class="hero-subtitle">Erstelle, teile und verwalte deine Wünsche – schnell und schön.</p>
+                    <div class="cta-row">
+                        <button class="btn cta-primary" id="menuMyBtn">Meine Wunschliste</button>
+                        <button class="btn cta-outline" id="menuOtherBtn">Andere Wunschlisten</button>
+                    </div>
+                    <div class="cta-row secondary">
+                        <button class="btn cta-outline" id="menuSettingsBtn">Einstellungen</button>
+                        <button class="btn cta-outline" id="menuProBtn">Pro</button>
+                        <button class="btn cta-outline" id="menuInfoBtn">Informationen</button>
+                    </div>
+                </div>
+                <div class="menu-pixels" aria-hidden="true"></div>
+            </section>
+        </div>
+
+        <div id="eventsOverviewScreen">
+            <header class="events-header">
+                <div class="header-top">
+                    <h1>Meine Wunschlisten</h1>
+                    <div class="user-info">
+                        <span id="userNameDisplay"></span>
+                        <button class="btn btn-secondary btn-small" id="logoutBtn">Abmelden</button>
+                    </div>
+                </div>
+            </header>
+            <aside class="right-sidebar">
+                <div class="sidebar-header">
+                    <span>Menü</span>
+                    <button class="hamburger sidebar-toggle" aria-label="Menü"></button>
+                </div>
+                <div class="sidebar-body">
+                    <button class="btn btn-secondary btn-small" id="navMyBtn0">Meine Wunschliste</button>
+                    <button class="btn btn-secondary btn-small" id="navOtherBtn0">Andere Wunschlisten</button>
+                    <button class="btn btn-secondary btn-small" id="navSettingsBtn0">Einstellungen</button>
+                    <button class="btn btn-secondary btn-small" id="navProBtn0">Pro</button>
+                    <button class="btn btn-secondary btn-small" id="navInfoBtn0">Informationen</button>
+                </div>
+            </aside>
+
+            <main class="events-main">
+                <div class="events-container" id="eventsContainer">
+                    <!-- Events werden hier dynamisch eingefügt -->
+                </div>
+                <button class="btn btn-primary btn-large" id="createEventBtn">+ Neues Ereignis erstellen</button>
+            </main>
+        </div>
+
+        <!-- Other Wishlists Screen -->
+        <div id="otherWishlistsScreen" style="display: none;">
+            <div class="layout-with-sidebar">
+                <aside class="right-sidebar">
+                    <div class="sidebar-header">
+                        <span>Menü</span>
+                        <button class="hamburger sidebar-toggle" aria-label="Menü"></button>
+                    </div>
+                    <div class="sidebar-body">
+                        <button class="btn btn-secondary btn-small" id="navMyBtn">Meine Wunschliste</button>
+                        <button class="btn btn-secondary btn-small" id="navOtherBtn">Andere Wunschlisten</button>
+                        <button class="btn btn-secondary btn-small" id="navSettingsBtn">Einstellungen</button>
+                        <button class="btn btn-secondary btn-small" id="navProBtn">Pro</button>
+                        <button class="btn btn-secondary btn-small" id="navInfoBtn">Informationen</button>
+                    </div>
+                </aside>
+                <section class="content">
+                    <h2>Andere Wunschlisten</h2>
+                    <div class="wishlist-container" id="otherListContainer"></div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Account Settings Screen -->
+        <div id="accountSettingsScreen" style="display: none;">
+            <div class="layout-with-sidebar">
+                <aside class="right-sidebar">
+                    <div class="sidebar-header">
+                        <span>Menü</span>
+                        <button class="hamburger sidebar-toggle" aria-label="Menü"></button>
+                    </div>
+                    <div class="sidebar-body">
+                        <button class="btn btn-secondary btn-small" id="navMyBtn2">Meine Wunschliste</button>
+                        <button class="btn btn-secondary btn-small" id="navOtherBtn2">Andere Wunschlisten</button>
+                        <button class="btn btn-secondary btn-small" id="navSettingsBtn2">Einstellungen</button>
+                        <button class="btn btn-secondary btn-small" id="navProBtn2">Pro</button>
+                        <button class="btn btn-secondary btn-small" id="navInfoBtn2">Informationen</button>
+                    </div>
+                </aside>
+                <section class="content">
+                    <h2>Account Einstellungen</h2>
+                    <form id="accountSettingsForm" class="auth-form" style="max-width:700px;margin:0 auto;">
+                        <div class="form-group">
+                            <label for="accountEmail">Email</label>
+                            <input type="email" id="accountEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountName">Name</label>
+                            <input type="text" id="accountName" placeholder="Dein Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="accountBirthday">Geburtstag</label>
+                            <input type="date" id="accountBirthday">
+                        </div>
+                        <div class="form-group">
+                            <label for="accountPassword">Neues Passwort</label>
+                            <input type="password" id="accountPassword" minlength="6" placeholder="••••••">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="accountEmailNotifications"> Email‑Benachrichtigungen aktivieren
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountDefaultOccasion">Standard‑Thema</label>
+                            <select id="accountDefaultOccasion">
+                                <option value="birthday">Geburtstag</option>
+                                <option value="christmas">Weihnachten</option>
+                                <option value="easter">Ostern</option>
+                                <option value="valentine">Valentinstag</option>
+                                <option value="anniversary">Jahrestag</option>
+                                <option value="other">Sonstiges</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </div>
+                        <div class="danger-zone" style="margin-top:14px;">
+                            <button type="button" class="btn btn-delete" id="deleteAccountBtn">Konto löschen</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+
+        <!-- Pro Screen -->
+        <div id="proScreen" style="display: none;">
+            <div class="layout-with-sidebar">
+                <aside class="right-sidebar">
+                    <div class="sidebar-header">
+                        <span>Menü</span>
+                        <button class="hamburger sidebar-toggle" aria-label="Menü"></button>
+                    </div>
+                    <div class="sidebar-body">
+                        <button class="btn btn-secondary btn-small" id="navMyBtn3">Meine Wunschliste</button>
+                        <button class="btn btn-secondary btn-small" id="navOtherBtn3">Andere Wunschlisten</button>
+                        <button class="btn btn-secondary btn-small" id="navSettingsBtn3">Einstellungen</button>
+                        <button class="btn btn-secondary btn-small" id="navProBtn3">Pro</button>
+                        <button class="btn btn-secondary btn-small" id="navInfoBtn3">Informationen</button>
+                    </div>
+                </aside>
+                <section class="content">
+                    <h2>Pro Funktionen</h2>
+                    <p>Pro kostet 1,5 Euro beim Inhaber dieser Website. Nach Zahlung erhältst du einen Code per Email.</p>
+                    <form id="proCodeForm" class="auth-form" style="max-width:500px;margin:20px auto;">
+                        <div class="form-group">
+                            <label for="proCode">Code eingeben</label>
+                            <input type="password" id="proCode" placeholder="Code" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Freischalten</button>
+                        </div>
+                        <div class="plan-table" id="proPlanTable"></div>
+                    </form>
+                    <div class="data-table" id="proProjectTable"></div>
+                    
+                </section>
+            </div>
+        </div>
+
+        <!-- Info Screen -->
+        <div id="infoScreen" style="display: none;">
+            <div class="layout-with-sidebar">
+                <aside class="right-sidebar">
+                    <div class="sidebar-header">
+                        <span>Menü</span>
+                        <button class="hamburger sidebar-toggle" aria-label="Menü"></button>
+                    </div>
+                    <div class="sidebar-body">
+                        <button class="btn btn-secondary btn-small" id="navMyBtn4">Meine Wunschliste</button>
+                        <button class="btn btn-secondary btn-small" id="navOtherBtn4">Andere Wunschlisten</button>
+                        <button class="btn btn-secondary btn-small" id="navSettingsBtn4">Einstellungen</button>
+                        <button class="btn btn-secondary btn-small" id="navProBtn4">Pro</button>
+                        <button class="btn btn-secondary btn-small" id="navInfoBtn4">Informationen</button>
+                    </div>
+                </aside>
+                <section class="content">
+                    <h2>Informationen</h2>
+                    <div class="info-grid">
+                        <div class="info-block">
+                            <h3>Über diese Website</h3>
+                            <p>Erstelle persönliche Wunschlisten, teile sie per Link und synchronisiere Geschenke mit Freunden. Preise werden automatisch erkannt und regelmäßig geprüft.</p>
+                        </div>
+                        <div class="info-block">
+                            <h3>Funktionen</h3>
+                            <ul class="info-list">
+                                <li>Mehrere Ereignisse pro Account</li>
+                                <li>Teilen‑Links mit Geschenk‑Reservierung</li>
+                                <li>Direkte Preis‑Erkennung und täglicher Rabatt‑Check</li>
+                                <li>Glücksrad für Auswahl von Geschenken</li>
+                                <li>Export und Statistiken</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Teilen & Reservierung</h3>
+                            <ul class="info-list">
+                                <li>Teile einen Link zur Ansicht deiner Wunschliste</li>
+                                <li>Freunde markieren „Ich schenke es“ – Name wird sichtbar</li>
+                                <li>„Nicht haben wollen“ ist nur im geteilten Link sichtbar</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Preisprüfung & Rabatte</h3>
+                            <ul class="info-list">
+                                <li>Automatische Preis‑Erkennung über Produkt‑URL</li>
+                                <li>Täglicher Rabatt‑Check und aktualisierte Preise</li>
+                                <li>Hinweise bei Preisänderungen (Pro)</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Datenschutz & Sicherheit</h3>
+                            <ul class="info-list">
+                                <li>Speicherung lokal im Browser deines Geräts</li>
+                                <li>Keine Weitergabe persönlicher Daten</li>
+                                <li>Optionale Cookies nur für Funktion und Komfort</li>
+                                <li>Geteilte Daten sind auf das gewählte Ereignis beschränkt</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Pro Vorteile</h3>
+                            <ul class="info-list">
+                                <li>Festliche Design‑Themen je Anlass</li>
+                                <li>Präsentations‑Export zusätzlich zu Text/JSON</li>
+                                <li>Schneller Support</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>FAQ</h3>
+                            <ul class="info-list">
+                                <li>Wie teile ich? – Über „Liste teilen“ im Ereignis</li>
+                                <li>Kann ich Wünsche ausblenden? – Ja, mit „Nicht haben wollen“</li>
+                                <li>Wie ändere ich das Thema? – In den Einstellungen des Ereignisses</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Projektstatus & Version</h3>
+                            <ul class="info-list">
+                                <li>Version: 1.0.0</li>
+                                <li>Status: Stabil</li>
+                                <li>Letztes Update: 13.11.2025</li>
+                                <li>Release‑Kanal: Live</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Technische Informationen</h3>
+                            <ul class="info-list">
+                                <li>Datenspeicherung: lokal im Browser (localStorage)</li>
+                                <li>Geteilte Daten: pro Ereignis über Share‑ID</li>
+                                <li>Cookies: optional für Komfort‑Einstellungen</li>
+                                <li>Kompatibilität: moderne Browser, Desktop und Mobile</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Roadmap</h3>
+                            <ul class="info-list">
+                                <li>Erweiterte Statistiken und KPIs</li>
+                                <li>Qualitäts‑Boost für KI‑Vorschläge</li>
+                                <li>Mehr Exportformate und Vorlagen</li>
+                                <li>Performance‑Optimierungen</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Kontakt & Support</h3>
+                            <p>Fragen oder Ideen? Schreibe uns über den Bereich „Kontaktinformationen“ im Footer.</p>
+                        </div>
+                        <div class="info-block">
+                            <h3>API‑Schlüssel & Sicherheit</h3>
+                            <p>Nutze öffentliche Schlüssel nur für nicht‑sensible Funktionen. Geheimnisse gehören immer auf den Server.</p>
+                            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                                <code id="apiKeyDisplay" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:8px 10px;border-radius:10px;">••••</code>
+                                <button class="btn btn-secondary btn-small" id="copyApiKeyBtn">Kopieren</button>
+                            </div>
+                            <ul class="info-list" style="margin-top:10px;">
+                                <li>Keinen geheimen Key im Browser speichern</li>
+                                <li>Serverless‑Funktionen nutzen für geschützte Vorgänge</li>
+                                <li>Rate‑Limits und Missbrauchsschutz beachten</li>
+                            </ul>
+                        </div>
+                        <div class="info-block">
+                            <h3>Kontaktformular</h3>
+                            <form id="contactForm">
+                                <div class="form-group"><label for="contactName">Dein Name</label><input id="contactName" type="text" required></div>
+                                <div class="form-group"><label for="contactEmail">Deine Email</label><input id="contactEmail" type="email" required></div>
+                                <div class="form-group"><label for="contactMessage">Nachricht</label><textarea id="contactMessage" rows="4" required></textarea></div>
+                                <div class="form-actions"><button type="submit" class="btn btn-primary">Senden</button></div>
+                                <small id="contactStatus" class="form-error"></small>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Event Detail Screen -->
+        <div id="eventDetailScreen" style="display: none;">
+            <header>
+                <div class="header-top">
+                    <button class="btn btn-secondary btn-small" id="backToEventsBtn">← Zurück</button>
+                    <h1 id="mainTitle">Meine Wunschliste</h1>
+                    <div class="user-info">
+                        <button class="btn btn-secondary btn-small" id="statsBtn">Statistiken</button>
+                    </div>
+                </div>
+                <div class="countdown-large-container" id="countdownLargeContainer">
+                    <div class="countdown-large" id="countdownLarge"></div>
+                </div>
+                <div class="header-buttons" id="headerButtons">
+                    <button class="btn btn-primary" id="addWishBtn">+ Neuen Wunsch hinzufügen</button>
+                    <button class="btn btn-secondary" id="settingsBtn">Einstellungen</button>
+                    <button class="btn btn-share" id="shareBtn">Liste teilen</button>
+                    <button class="btn btn-export" id="exportBtn">Exportieren</button>
+                    <button class="btn btn-ai" id="aiSuggestBtn">KI-Vorschläge</button>
+                    <button class="btn btn-secondary" id="wheelBtn">Drehrad (gekaufte Wünsche)</button>
+                </div>
+                <div class="header-buttons" id="shareActions" style="display: none;">
+                    <button class="btn btn-primary" id="shareWheelBtn">Glücksrad: Alle Wünsche</button>
+                </div>
+            </header>
+
+        <main>
+            <div class="controls-panel" id="controlsPanel">
+                <div class="search-sort-container">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Wünsche durchsuchen...">
+                    </div>
+                    <div class="sort-box">
+                        <label for="sortSelect">Sortieren nach:</label>
+                        <select id="sortSelect">
+                            <option value="priority">Wunschstärke (höchste zuerst)</option>
+                            <option value="priority-asc">Wunschstärke (niedrigste zuerst)</option>
+                            <option value="price">Preis (höchste zuerst)</option>
+                            <option value="price-asc">Preis (niedrigste zuerst)</option>
+                            <option value="name">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="category">Kategorie</option>
+                            <option value="newest">Neueste zuerst</option>
+                            <option value="oldest">Älteste zuerst</option>
+                        </select>
+                    </div>
+                    <div class="filter-box">
+                        <label for="categoryFilter">Kategorie filtern:</label>
+                        <select id="categoryFilter">
+                            <option value="">Alle Kategorien</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="stats-panel" id="statsPanel">
+                    <div class="stat-item">
+                        <span class="stat-label">Anzahl:</span>
+                        <span class="stat-value" id="wishCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Gesamtpreis:</span>
+                        <span class="stat-value" id="totalPrice">0,00 €</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Ø Preis:</span>
+                        <span class="stat-value" id="avgPrice">0,00 €</span>
+                    </div>
+                </div>
+            </div>
+            <div id="wishlistContainer" class="wishlist-container">
+                <div class="empty-state" id="emptyState">
+                    <p>Noch keine Wünsche hinzugefügt</p>
+                    <p>Klicke auf "Neuen Wunsch hinzufügen" um zu beginnen!</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modal zum Hinzufügen/Bearbeiten von Wünschen -->
+        <div id="wishModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeModal">&times;</span>
+                <h2 id="modalTitle">Neuen Wunsch hinzufügen</h2>
+                <form id="wishForm">
+                    <div class="form-group">
+                        <label for="wishName">Name des Wunsches:</label>
+                        <input type="text" id="wishName" required placeholder="z.B. PlayStation 5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wishPrice">Preis (€):</label>
+                        <input type="number" id="wishPrice" step="0.01" min="0" required placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wishCategory">Kategorie:</label>
+                        <select id="wishCategory" required>
+                            <option value="">Bitte wählen...</option>
+                            <option value="Technik">Technik</option>
+                            <option value="Bücher">Bücher</option>
+                            <option value="Kleidung">Kleidung</option>
+                            <option value="Spiele">Spiele</option>
+                            <option value="Sport">Sport</option>
+                            <option value="Schmuck">Schmuck</option>
+                            <option value="Möbel">Möbel</option>
+                            <option value="Erlebnisse">Erlebnisse</option>
+                            <option value="Sonstiges">Sonstiges</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="wishDoNotWant">
+                            Nicht haben wollen (nur im geteilten Link sichtbar)
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wishProductUrl">Produkt-URL (für Preis-Erkennung):</label>
+                        <input type="url" id="wishProductUrl" placeholder="https://shop.example.com/produkt">
+                        <small id="detectedPriceInfo">Wenn gesetzt, wird der Preis automatisch ermittelt und täglich geprüft.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wishImage">Bild-URL:</label>
+                        <input type="url" id="wishImage" placeholder="https://example.com/bild.jpg">
+                        <small>Oder lade ein Bild hoch:</small>
+                        <input type="file" id="wishImageFile" accept="image/*">
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wishPriority">Wie sehr wünsche ich es mir? (1-10):</label>
+                        <div class="priority-container">
+                            <input type="range" id="wishPriority" min="1" max="10" value="5">
+                            <span id="priorityValue">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="wishGroupGift">
+                            Als Gruppen-Geschenk markieren (mehrere Personen schenken zusammen)
+                        </label>
+                    </div>
+
+                    <div class="form-group" id="groupGiftDetails" style="display: none;">
+                        <label for="groupGiftNames">Namen der Schenkenden (durch Komma getrennt):</label>
+                        <input type="text" id="groupGiftNames" placeholder="Max, Anna, Tom">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">Abbrechen</button>
+                        <button type="submit" class="btn btn-primary">Hinzufügen</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <button id="scrollTopBtn" class="scroll-top" aria-label="Nach oben">↑</button>
+
+        <!-- Wunschzettel-Einstellungen Modal -->
+        <div id="wishlistSettingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeSettingsModal">&times;</span>
+                <h2>Wunschzettel-Einstellungen</h2>
+                <form id="wishlistSettingsForm">
+                    <div class="form-group">
+                        <label for="wishlistName">Name des Wunschzettels:</label>
+                        <input type="text" id="wishlistName" required placeholder="z.B. Geburtstag 2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="wishlistOccasion">Anlass:</label>
+                        <select id="wishlistOccasion" required>
+                            <option value="birthday">Geburtstag</option>
+                            <option value="christmas">Weihnachten</option>
+                            <option value="easter">Ostern</option>
+                            <option value="valentine">Valentinstag</option>
+                            <option value="anniversary">Jahrestag</option>
+                            <option value="other">Sonstiges</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="wishlistDate">Datum:</label>
+                        <input type="date" id="wishlistDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="wishlistBackground">Hintergrundbild (optional):</label>
+                        <input type="url" id="wishlistBackground" placeholder="https://example.com/bild.jpg">
+                        <small>Oder lade ein Bild hoch:</small>
+                        <input type="file" id="wishlistBackgroundFile" accept="image/*">
+                        <div id="backgroundPreview" class="image-preview"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelSettingsBtn">Abbrechen</button>
+                        <button type="submit" class="btn btn-primary">Speichern</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div id="shareModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeShareModal">&times;</span>
+                <h2>Wunschliste teilen</h2>
+                <p>Teile diesen Link, um deine Wunschliste anzuzeigen (nur Ansicht, keine Bearbeitung):</p>
+                <div class="share-link-container">
+                    <input type="text" id="shareLink" readonly>
+                    <button class="btn btn-primary" id="copyLinkBtn">Link kopieren</button>
+                </div>
+                <div class="share-qr">
+                    <img id="shareQr" alt="QR-Code">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="generatePowerPoint">
+                        Automatisch PowerPoint mit Gamma erstellen
+                    </label>
+                </div>
+                <button class="btn btn-primary" id="generateGammaBtn" style="display: none;">PowerPoint mit Gamma erstellen</button>
+                <p class="share-note">Im geteilten Modus kann die Liste nur angesehen, aber nicht bearbeitet werden.</p>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeExportModal">&times;</span>
+                <h2>Wunschliste exportieren</h2>
+                <div class="export-options">
+                    <button class="btn btn-primary" id="exportTextBtn">Als Text exportieren</button>
+                    <button class="btn btn-primary" id="exportJsonBtn">Als JSON exportieren</button>
+                    <button class="btn btn-secondary" id="printBtn">Drucken</button>
+                </div>
+                <div id="exportPreview" class="export-preview"></div>
+            </div>
+        </div>
+
+        <footer class="site-footer">
+            <div class="footer-social">
+                <a href="#" aria-label="Instagram">📷</a>
+                <a href="#" aria-label="YouTube">▶️</a>
+                <a href="#" aria-label="TikTok">🎵</a>
+            </div>
+            <div class="footer-links">
+                <span>© 2025 Wunschliste</span>
+                <a href="#" id="openPrivacy">Datenschutzerklärung</a>
+                <a href="#" id="openRevocation">Widerrufsrecht</a>
+                <a href="#" id="openAgb">AGB</a>
+                <a href="#" id="openShipping">Versand</a>
+                <a href="#" id="openContact">Kontaktinformationen</a>
+                <a href="#" id="openImpressum">Impressum</a>
+                <a href="#" id="footerCookieLink">Cookie-Einstellungen</a>
+            </div>
+        </footer>
+
+        <div id="cookieBanner" class="cookie-banner">
+            <div class="cookie-title">Antons Cookies</div>
+            <div class="cookie-text">Wir verwenden Cookies für grundlegende Funktionen sowie optional für Analyse und Marketing. Du kannst zustimmen oder ablehnen.</div>
+            <div class="cookie-actions">
+                <button class="btn btn-secondary" id="openCookieSettings">Einstellungen</button>
+                <button class="btn btn-primary" id="acceptCookiesBtn">Zustimmen</button>
+                <button class="btn btn-secondary" id="rejectCookiesBtn">Ablehnen</button>
+            </div>
+        </div>
+
+        <div id="cookieSettingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeCookieSettingsModal">&times;</span>
+                <h2>Cookie-Einstellungen</h2>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="cookieNecessary" checked disabled>
+                        Notwendig
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="cookieAnalytics">
+                        Analyse
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="cookieMarketing">
+                        Marketing
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" id="cancelCookieSettings">Abbrechen</button>
+                    <button class="btn btn-primary" id="saveCookieSettingsBtn">Speichern</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Suggestions Modal -->
+        <div id="aiModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeAiModal">&times;</span>
+                <h2>KI-Wunschvorschläge</h2>
+                <div class="form-group">
+                    <label for="aiProvider">KI auswählen:</label>
+                    <select id="aiProvider">
+                        <option value="openai">OpenAI GPT</option>
+                        <option value="claude">Claude (Anthropic)</option>
+                        <option value="gemini">Google Gemini</option>
+                        <option value="local">Lokale KI (Simuliert)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="aiPrompt">Beschreibe deine Interessen oder gib einen Hinweis:</label>
+                    <textarea id="aiPrompt" rows="4" placeholder="z.B. Ich mag Gaming, Technik und Sport..."></textarea>
+                </div>
+                <button class="btn btn-primary" id="generateAiSuggestionsBtn">Vorschläge generieren</button>
+                <div id="aiSuggestions" class="ai-suggestions"></div>
+            </div>
+        </div>
+
+        <!-- Statistics Modal -->
+        <div id="statsModal" class="modal">
+            <div class="modal-content modal-large">
+                <span class="close" id="closeStatsModal">&times;</span>
+                <h2>Statistiken</h2>
+                <div class="stats-content">
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="stats-details" id="statsDetails"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wheel Modal -->
+        <div id="wheelModal" class="modal">
+            <div class="modal-content modal-large">
+                <span class="close" id="closeWheelModal">&times;</span>
+                <h2>Drehrad der gekauften Wünsche</h2>
+                <canvas id="wheelCanvas" width="480" height="480"></canvas>
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button class="btn btn-primary" id="spinWheelBtn">Drehen</button>
+                </div>
+                <div id="wheelList" class="ai-suggestions"></div>
+                <div id="wheelConfirm" class="confirm-box" style="display:none;">
+                    <div id="wheelConfirmText"></div>
+                    <div class="form-actions" style="margin-top: 15px; gap: 10px; display: flex;">
+                        <button class="btn btn-primary" id="wheelConfirmYes">Ja, ich schenke es</button>
+                        <button class="btn btn-secondary" id="wheelConfirmNo">Nein</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+        <!-- Share Name Modal -->
+        <div id="shareNameModal" class="modal">
+            <div class="modal-content">
+                <h2>Dein Name</h2>
+                <p>Bitte gib deinen Namen ein, damit der Besitzer der Wunschliste weiß, wer ihm etwas schenkt:</p>
+                <form id="shareNameForm">
+                    <div class="form-group">
+                        <label for="shareNameInput">Dein Name:</label>
+                        <input type="text" id="shareNameInput" required placeholder="z.B. Max Mustermann" autofocus>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Weiter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
